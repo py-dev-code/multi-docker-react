@@ -1,0 +1,7 @@
+FROM node:14.14.0-alpine
+WORKDIR '/app'
+COPY package.json .
+RUN npm install
+COPY . .
+# This is the startup command to run nodemon for dev env
+CMD ["npm", "run", "dev"]
