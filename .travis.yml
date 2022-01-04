@@ -1,0 +1,25 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  # We will run the tests inside client folder only so updating the build context here to ./client and using dev dockerfile instead of prod
+  - docker build -t vikasnarwaria/multi-docker-test -f ./client/Dockerfile.dev ./client
+
+script:
+  # -e CI=true is to run the tests in CI mode so that it will just run the tests once and exit
+  - docker run -e CI=true vikasnarwaria/multi-docker-test npm test
+
+after_success:
+  # Build the images for the prod
+  - docker build -t vikasnarwaria/multi-client ./client
+  - docker build -t vikasnarwaria/multi-nginx ./nginx
+  - docker build -t vikasnarwaria/multi-server ./server
+  - docker build -t vikasnarwaria/multi-worker ./worker
+  # Login to Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push the prod images to Docker Hub
+  - docker push vikasnarwaria/multi-client
+  - docker push vikasnarwaria/multi-nginx
+  - docker push vikasnarwaria/multi-server
+  - docker push vikasnarwaria/multi-worker
